@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Angular implementation for wheel method of visualize rhythm</title>	
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<link href='//fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+		<link rel="stylesheet" href="angular-wheel-rhythm.css"  type='text/css'>
+		<script src="bower_components/angular/angular.min.js"></script>
+		<script src="bower_components/angular-animate/angular-animate.min.js"></script>
+		<script src="bower_components/jquery/dist/jquery.min.js"></script>
+		<script src="bower_components/lodash/dist/lodash.min.js"></script>
+		<script src="angular-wheel-rhythm.js"></script>
+		<script src="example/app.js"></script>
+		<style>
+			body { font-family: 'Roboto', sans-serif; font-size: 13px; }	
+			h1,h2,h3 {text-align: center;}
+			iframe {display: block; margin:0 auto;}
+			.container {width:600px; margin:0 auto;}		
+			.sound-lib {width:420px; overflow: hidden; margin:0 auto; margin-bottom: 50px;}
+			.sound-types {list-style: none; margin: 0; padding: 0; padding-top: 20px; width:310px; margin:0 auto;}
+			.sound-types li {display: block; padding:0; padding-right: 15px; }
+			.sound-types li span.title {width:75px; display: inline-block; position: relative;}
+			.sound {width:16px; height: 16px;  border:1px solid #666; margin-left: 3px; display: inline-block; border-radius: 50%; 
+					cursor: pointer; margin-top: 6px; color:#fff; font-size: 11px; text-align: center; position: relative; }
+			.active {background: white !important; color:#666;}
+			.rhythms {text-align: center; margin: 30px;}
+			.rhythms h2 {margin:0; padding:0;}
+			.rhythms ul {list-style: none; padding:0; margin:0;}
+			.rhythms ul li {display: inline-block; padding: 5px;}
+			.rhythms ul li a {color:blue;}
+			.rhythms ul li a:hover {}
+			.rhythms ul li a:visited {color:blue;}
+			.export {display: block; margin: 0 auto;}
+			textarea {display: block; width:400px; height: 240px; margin:0 auto;}
+
+			p.head {font-size: 20px;}
+			pre {padding: 20px; background: #f7f7f7; }
+		</style>
+	</head>	
+	<body ng-app="app">
+		
+		<div class="container">
+			
+			<h2>AngularJS directive for wheel method of visualize rhythm</h2>
+			<h3>Inspired by TEDEd talk of John Varney</h3>
+			<iframe width="560" height="315" src="//www.youtube.com/embed/2UphAzryVpY" frameborder="0" allowfullscreen></iframe>
+
+			<div class="sound-lib" ng-controller="MainCtrl">				
+				<div class="rhythms">
+					<h2>Select rhythms</h2>
+					<ul>
+						<li ng-repeat="r in rhythms"><a href="#" ng-click="selectRhythm($index)">{{r.name}}</a></li>
+					</ul>				
+				</div>
+
+				<jv-wheel-rhythm class="wr-box" name="rhythms[activeRhythm].name" tempo="rhythms[activeRhythm].tempo" sound-lib="soundLib">
+					<jv-wheel radius="320" sounds="rhythms[activeRhythm].wheels[0]"></jv-wheel>
+					<jv-wheel radius="260" sounds="rhythms[activeRhythm].wheels[1]"></jv-wheel>
+					<jv-wheel radius="200" sounds="rhythms[activeRhythm].wheels[2]"></jv-wheel>
+					<jv-wheel radius="140" sounds="rhythms[activeRhythm].wheels[3]"></jv-wheel>
+				</jv-wheel-rhythm>
+
+				<button class="export" ng-click="export()">{{exportLabel}}</button>
+				<textarea onclick="this.focus();this.select()" readonly="readonly" ng-show="showExported" ng-bind="updateExport()"></textarea>
+
+				<ul class="sound-types">
+					<li ng-repeat="sound in soundLib">
+						<span class="title">{{sound.type}}</span>
+						<span class="sound" ng-style="{'background': sound.color}" ng-repeat="url in sound.sounds" 
+								ng-class="{active: isActive(sound, url)}" ng-click="select(sound, $index)">{{$index}}</span>
+					</li>
+				</ul>
+			</div>		
+			
+			<p class="head">Using the example above:</p>
+			<p>You can select a sound from library then <strong>double click</strong> on a wheel to place the new sound. You can move the sound across the wheel by <strong>dragging</strong> the coloured circle. <strong>Double click</strong> on the circle to remove it from the wheel.</p> 
+			<p>You can use <strong>export</strong> function to save the json object and use it later in your app.</p>
+			<p>It works in latest Chrome, Firefox and Internet Explorer 10+</p>
+			<p><strong>Note:</strong> this example is not working in IE because the sounds from the library are .wav and IE have not support for wav files.</p>
+
+			<p><strong>Possible bugs and/or errors:</strong></p>
+			<p>Some times some sounds are skipped because of javascript inaccurate timers. It use <strong>requestAnimationFrame</strong> function which ticks 60 times per second (every 16ms)</p>
+
+			<p class="head">Module usage:</p>
+			<p>Load angular-wheel-rhythm.js module, e.g.</p>
+			<pre>angular.module('your-module', ['wheelRhythm']);</pre>
+			<p>Prepare a wheel box:</p>
+			<pre> 
+&#60;jv-wheel-rhythm name="name" tempo="tempo" sound-lib="soundLib"&#62;
+	&#60;jv-wheel radius="320" sounds="sounds">&#60;/jv-wheel>
+&#60;/jv-wheel-rhythm&#62;
+			</pre>
+			Where <strong>name</strong> is the name of the rhythm displayed, <strong>tempo</strong> is the default tempo played. Tempo equals 60 means that a second takes a full circle.
+			The <strong>soundLib</strong> is the default library of sounds loaded by module. It's an array of objects like this:
+			<pre>
+[
+	{
+		'type': 'kick',
+		'color': '#003333',
+		'sounds': [
+			'sounds/KickDrums1/kickdrum1.wav',
+			'sounds/KickDrums1/kickdrum2.wav',
+			'sounds/KickDrums1/kickdrum3.wav'
+			]
+	},
+	{
+		'type': 'bass',
+		'color': '#3399CC',
+		'sounds': [
+			'sounds/BassDrums1/bassdrum1.wav',
+			'sounds/BassDrums1/bassdrum2.wav',
+			'sounds/BassDrums1/bassdrum3.wav'
+		]
+	},
+	...
+]
+			</pre>
+			<p>Inside <strong>&#60;jv-wheel-rhythm></strong> can be placed another <strong>&#60;jv-wheel></strong> directives as wheels where sounds can be placed. It has a <strong>radius</strong> and <strong>sounds</strong> attributes. The sounds attribute is an array like:</p>
+			<pre>
+[
+	{type: 'hihat', active:5, angle: 45},
+	{type: 'hihat', active:5, angle: 135},
+	{type: 'hihat', active:5, angle: 225},
+	{type: 'hihat', active:5, angle: 315},
+	{type: 'hihat', active:5, angle: 337.5},
+	...
+]
+			</pre>
+			<p>where <strong>type</strong> matches the type from the sound library and <strong>active</strong> is the active sound from sounds array from library. The <strong>angle</strong> attribute is the angle where sound is placed on the wheel.</p>
+
+			<p class="head">Download:</p>
+			<p>Using Bower:</p>
+			<pre>bower install angular-wheel-rhythm</pre>
+
+			<p class="head">TODO:</p>
+			<ul>
+				<li>Snap to grid</li>
+				<li>Drag & drop instead of double click to add to wheel.</li>
+				<li>Fix the timers</li>
+			</ul>
+		</div>
+
+<a href="https://github.com/ciocan/angular-wheel-rhythm" target="_blank"><img style="position: absolute; top: 0; right: 0; border: 0;" src="//camo.githubusercontent.com/365986a132ccd6a44c23a9169022c0b5c890c387/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f7265645f6161303030302e706e67" alt="Fork me on GitHub" data-canonical-src="//s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png"></a>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-56437047-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+
+	</body>
+</html>

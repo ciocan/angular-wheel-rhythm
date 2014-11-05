@@ -1,0 +1,147 @@
+<html>
+	<head>
+
+	<style>
+
+		#circle{
+			position: relative; 
+			/*left:50%; top:50%; */
+			width: 300px;
+			height: 300px;
+			border-radius: 50%;
+			background: #999;
+		}
+		
+		#circle-in{
+			position: absolute;
+			top: 8px;
+			left: 8px;
+			width: 284px;
+			height: 284px;
+			border-radius: 50%;
+			background: #fff;
+		}
+		
+		#picker{
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			height: 0px;
+			margin-top: -10px;
+			width: 50%;
+			border: 1px solid red;
+    		-webkit-transform-origin: center left;
+       		-moz-transform-origin: center left;
+            -ms-transform-origin: center left;
+    		-o-transform-origin: center left;
+            transform-origin: center left;            
+		}
+		
+		#picker-circle{
+			width: 20px;
+			height: 20px;
+			border-radius: 50%;
+			background: blue;
+			margin: 0 -5px 0 auto;
+			cursor: move;
+		}
+
+		.container {width: 300px; padding:10px; border:1px solid #666; margin:0 auto; margin-top:100px; overflow: hidden;}
+
+	</style>
+	</head>
+	<body>
+
+		<div class="container">
+			<div id="circle">
+				<div id="circle-in"></div>
+				<div id="picker">
+					<div id="picker-circle"></div>
+				</div>
+			</div>
+		</div>
+
+
+<script>
+(function() {
+
+			var circle = document.getElementById('circle'),
+				picker = document.getElementById('picker'),
+				pickerCircle = picker.firstElementChild,
+				rect = circle.getBoundingClientRect(),
+				
+				center = {
+					x: rect.left + rect.width / 2,
+					y: rect.top + rect.height / 2
+				},
+				
+                transform = (function(){
+                    var prefs = ['t', 'WebkitT', 'MozT', 'msT', 'OT'],
+                        style = document.documentElement.style,
+                        p
+                    for(var i = 0, len = prefs.length; i < len; i++){
+                        if( (p = prefs[i] + 'ransform') in  style ) return p
+                    }
+                    
+                    alert('your browser doesnt support css transforms!')
+                })(),
+                
+				rotate = function(x, y){
+					var deltaX = x - center.x,
+						deltaY = y - center.y,
+					
+					// The atan2 method returns a numeric value between -pi and pi representing the angle theta of an (x,y) point.
+					// This is the counterclockwise angle, measured in radians, between the positive X axis, and the point (x,y).
+					// Note that the arguments to this function pass the y-coordinate first and the x-coordinate second.
+					// atan2 is passed separate x and y arguments, and atan is passed the ratio of those two arguments.
+					// * from Mozilla's MDN
+					
+					// Basically you give it an [y, x] difference of two points and it give you back an angle
+					// The 0 point of the angle is left (the initial position of the picker is also left)
+						
+						angle = Math.atan2(deltaY, deltaX) * 180 / Math.PI
+					
+					// Math.atan2(deltaY, deltaX) => [-PI +PI]
+					// We must convert it to deg so...
+					// / Math.PI => [-1 +1]
+					// * 180 => [-180 +180]
+					console.log(Math.round(angle));	
+					return angle
+				};
+				
+				// DRAGSTART
+				mousedown = function(event){
+					event.preventDefault()
+					document.body.style.cursor = 'move'
+					mousemove(event)
+					document.addEventListener('mousemove', mousemove)
+					document.addEventListener('mouseup', mouseup)
+				},
+			
+				// DRAG
+				mousemove = function(event){
+					picker.style[transform] = 'rotate(' + rotate(event.pageX, event.pageY) + 'deg)'
+				},
+			
+				// DRAGEND
+				mouseup = function(){
+					document.body.style.cursor = null;
+					document.removeEventListener('mouseup', mouseup)
+					document.removeEventListener('mousemove', mousemove)
+				}
+			
+				//picker.style[transform] = 'rotate(' + -90 + 'deg)';
+						
+			// DRAG START
+			pickerCircle.addEventListener('mousedown', mousedown)
+			
+			// ENABLE STARTING THE DRAG IN THE BLACK CIRCLE
+			// circle.addEventListener('mousedown', function(event){
+			// 	if(event.target == this) mousedown(event)
+			// })
+
+})()
+		</script>
+		
+	</body>
+</html>
