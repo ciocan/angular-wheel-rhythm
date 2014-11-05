@@ -13,7 +13,7 @@
   "homepage": "http://ciocan.github.io/angular-wheel-rhythm",
   "repository": {
     "type": "git",
-    "url": "git://github.io/ciocan/angular-wheel-rhythm.git"
+    "url": "git://github.com/ciocan/angular-wheel-rhythm.git"
   },
   "license": "MIT",
   "ignore": [
